@@ -1,6 +1,3 @@
-const API_BASE_URL = window.location.origin.includes('localhost')
-  ? 'http://localhost:4002'
-  : 'https://phone-2cv4.onrender.com';
 let products = [];
 let orders = [];
 let users = [];
