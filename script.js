@@ -148,107 +148,115 @@ function displayProducts() {
 }
 
 window.deleteProduct = async function(id) {
-  if (!id) {
-    alert('Invalid product ID.');
-    return;
-  }
+
   if (!confirm('Are you sure you want to delete this product?')) return;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, { method: 'DELETE' });
+    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      alert('Failed to delete product. Server response: ' + errorText);
+      return;
+    }
     const data = await response.json();
     if (data.success) {
       alert('Product deleted successfully!');
       loadProducts();
     } else {
-      alert(data.message || 'Failed to delete product.');
+      alert(data.error || data.message || 'Failed to delete product.');
     }
   } catch (err) {
-    alert('Error deleting product.');
+    alert('Error deleting product: ' + (err.message || err));
   }
 }
 
 window.editProduct = function(id) {
-  const product = products.find(p => String(p.id) === String(id) || String(p._id) === String(id));
-  if (!product) return alert('Product not found.');
-  const modal = document.getElementById('edit-product-modal');
-  const form = document.getElementById('edit-product-form');
-  const closeBtn = document.getElementById('close-edit-product-modal');
-  const nameInput = document.getElementById('edit-product-name');
-  const priceInput = document.getElementById('edit-product-price');
-  const categoryInput = document.getElementById('edit-product-category');
-  const descInput = document.getElementById('edit-product-description');
-  const stockInput = document.getElementById('edit-product-stock');
-  const imageInput = document.getElementById('edit-product-image');
-  const previewImg = document.getElementById('edit-product-image-preview');
-
-  nameInput.value = product.name || '';
-  priceInput.value = product.price || '';
-  categoryInput.value = product.category || '';
-  descInput.value = product.description || product.desc || '';
-  stockInput.value = product.stock || '';
-  previewImg.src = (product.images && product.images[0]) || product.imageUrl || '';
-  previewImg.style.display = previewImg.src ? 'block' : 'none';
-  imageInput.value = '';
-
-  modal.classList.remove('hidden');
-  modal.style.display = 'block';
-
-  imageInput.onchange = function() {
-    if (this.files && this.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        previewImg.src = e.target.result;
-        previewImg.style.display = 'block';
-      };
-      reader.readAsDataURL(this.files[0]);
-    } else {
-      previewImg.style.display = 'none';
-    }
-  };
-
-  closeBtn.onclick = () => {
-    modal.classList.add('hidden');
+  // Find product by id
+  const product = products.find(p => String(p._id || p.id) === String(id));
+  if (!product) {
+    alert('Product not found.');
+    return;
+  }
+  // Show edit modal
+  let modal = document.getElementById('edit-product-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'edit-product-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.4)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `
+      <form id="edit-product-form" style="background:#fff;padding:2em;border-radius:8px;min-width:320px;max-width:95vw;box-shadow:0 2px 12px #0002;position:relative;">
+        <h2>Edit Product</h2>
+        <label>Name:<br><input type="text" id="edit-product-name" required></label><br>
+        <label>Price:<br><input type="number" id="edit-product-price" required></label><br>
+        <label>Category:<br><input type="text" id="edit-product-category" required></label><br>
+        <label>Description:<br><textarea id="edit-product-description" required></textarea></label><br>
+        <label>Stock:<br><input type="number" id="edit-product-stock" required></label><br>
+        <label>Image URL:<br><input type="text" id="edit-product-imageUrl" required></label><br>
+        <div style="margin-top:1em;text-align:right;">
+          <button type="button" id="close-edit-product-modal" style="margin-right:1em;">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    modal.style.display = 'flex';
+  }
+  // Prefill form
+  document.getElementById('edit-product-name').value = product.name || '';
+  document.getElementById('edit-product-price').value = product.price || '';
+  document.getElementById('edit-product-category').value = product.category || '';
+  document.getElementById('edit-product-description').value = product.description || product.desc || '';
+  document.getElementById('edit-product-stock').value = product.stock || '';
+  document.getElementById('edit-product-imageUrl').value = (product.images && product.images[0]) || product.imageUrl || '';
+  // Close modal logic
+  document.getElementById('close-edit-product-modal').onclick = function() {
     modal.style.display = 'none';
   };
-
-  form.onsubmit = async function(e) {
+  modal.onclick = function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  };
+  // Handle form submit
+  document.getElementById('edit-product-form').onsubmit = async function(e) {
     e.preventDefault();
-    const name = nameInput.value.trim();
-    const price = parseFloat(priceInput.value);
-    const category = categoryInput.value.trim();
-    const description = descInput.value.trim();
-    const stock = parseInt(stockInput.value, 10);
-    let imageUrl = previewImg.src;
-    if (imageInput.files[0]) {
-      const reader = new FileReader();
-      reader.onload = async function(event) {
-        imageUrl = event.target.result;
-        await saveEdit();
-      };
-      reader.readAsDataURL(imageInput.files[0]);
+    const name = document.getElementById('edit-product-name').value.trim();
+    const price = parseFloat(document.getElementById('edit-product-price').value);
+    const category = document.getElementById('edit-product-category').value.trim();
+    const description = document.getElementById('edit-product-description').value.trim();
+    const stock = parseInt(document.getElementById('edit-product-stock').value, 10);
+    const imageUrl = document.getElementById('edit-product-imageUrl').value.trim();
+    if (!name || isNaN(price) || !category || !description || isNaN(stock) || !imageUrl) {
+      alert('Please fill in all fields correctly.');
       return;
-    } else {
-      await saveEdit();
     }
-    async function saveEdit() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, price, category, description, stock, imageUrl })
-        });
-        const data = await response.json();
-        if (data.success) {
-          alert('Product updated successfully!');
-          modal.classList.add('hidden');
-          modal.style.display = 'none';
-          loadProducts();
-        } else {
-          alert(data.message || 'Failed to update product.');
-        }
-      } catch (err) {
-        alert('Error updating product.');
+    // PATCH request to backend
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, category, description, stock, imageUrl })
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Product updated successfully!');
+        modal.style.display = 'none';
+        loadProducts();
+      } else {
+        alert(data.message || 'Failed to update product.');
       }
+    } catch (err) {
+      alert('Error updating product.');
     }
   };
 };
