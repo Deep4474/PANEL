@@ -1,192 +1,107 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📱Admin Panel - GOD'S OWN PHONE GADGET</title>
+  <title>LAMAR PHONES & GADGETS Admin Panel</title>
   <link rel="stylesheet" href="style.css">
-  <!-- The above path is correct if this file is opened as admin-panel/index.html -->
   <link rel="icon" href="../favicon.ico" type="image/x-icon" />
-  <!-- Supabase JS client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-  <div class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="sidebar-header">📱 GOD'S OWN ADMIN</div>
-      <nav>
-        <ul>
-          <li><a href="#" id="nav-dashboard" class="sidebar-link active">Dashboard</a></li>
-          <li><a href="#" id="nav-products" class="sidebar-link">Products</a></li>
-          <li><a href="#" id="nav-orders" class="sidebar-link">Orders</a></li>
-          <li><a href="#" id="nav-users" class="sidebar-link">Users</a></li>
-          <li><a href="#" id="nav-sms" class="sidebar-link">SMS</a></li>
-          <li><a href="#" id="nav-settings" class="sidebar-link">Settings</a></li>
-          <li><a href="#" id="nav-logout" class="sidebar-link">Logout</a></li>
-        </ul>
-      </nav>
+  <div class="admin-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">LAMAR ADMIN</div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="sidebar-link active" id="nav-dashboard">Dashboard</a></li>
+        <li><a href="#" class="sidebar-link" id="nav-products">Products</a></li>
+        <li><a href="#" class="sidebar-link" id="nav-orders">Orders</a></li>
+        <li><a href="#" class="sidebar-link" id="nav-users">Users</a></li>
+        <li><a href="#" class="sidebar-link" id="nav-sms">SMS</a></li>
+        <li><a href="#" class="sidebar-link" id="nav-settings">Settings</a></li>
+        <li><a href="#" class="sidebar-link" id="nav-logout">Logout</a></li>
+      </ul>
     </aside>
-    <main class="admin-main">
-      <header class="admin-header">
-        <h1 id="admin-title">Dashboard</h1>
+    <main class="main-content">
+      <header class="main-header">
+        <h1 id="main-title">Dashboard</h1>
         <button id="add-product-btn" class="btn btn-primary">Add Product</button>
       </header>
-      <section id="dashboard-section" class="admin-section">Welcome to the admin dashboard!</section>
-      <section id="products-section" class="admin-section" style="display:none;">
+      <section id="dashboard-section" class="section">Welcome to the admin dashboard!</section>
+      <section id="products-section" class="section" style="display:none;">
         <h2>Product Management</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Description</th><th>Stock</th><th>Image</th><th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="products-body">
-            <tr><td colspan="8">Loading...</td></tr>
-          </tbody>
-        </table>
+        <div id="products-table-container"></div>
       </section>
-      <section id="orders-section" class="admin-section" style="display:none;">
+      <section id="orders-section" class="section" style="display:none;">
         <h2>Orders</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th><th>Product</th><th>Qty</th><th>Customer</th><th>Phone</th><th>Address</th><th>Delivery</th><th>Payment</th><th>Status</th><th>Date</th><th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="orders-body">
-            <tr><td colspan="11">Loading...</td></tr>
-          </tbody>
-        </table>
+        <div id="orders-table-container"></div>
       </section>
-      <section id="users-section" class="admin-section" style="display:none;">
+      <section id="users-section" class="section" style="display:none;">
         <h2>Users</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th><th>Email</th><th>Verified</th>
-            </tr>
-          </thead>
-          <tbody id="users-body">
-            <tr><td colspan="3">Loading...</td></tr>
-          </tbody>
-        </table>
+        <div id="users-table-container"></div>
       </section>
-      <section id="sms-section" class="admin-section" style="display:none;">
+      <section id="sms-section" class="section" style="display:none;">
         <h2>SMS Management</h2>
-        <div class="sms-container">
-          <div class="sms-form-section">
-            <h3>Send SMS</h3>
-            <form id="send-sms-form">
-              <div class="form-group">
-                <label for="sms-recipients">Recipients</label>
-                <select id="sms-recipients" required>
-                  <option value="">Select recipients...</option>
-                  <option value="all">All Users</option>
-                  <option value="custom">Custom Numbers</option>
-                </select>
-              </div>
-              <div class="form-group" id="custom-numbers-group" style="display:none;">
-                <label for="custom-phone-numbers">Phone Numbers (comma separated)</label>
-                <input type="text" id="custom-phone-numbers" placeholder="+2348012345678, +2348765432109" />
-              </div>
-              <div class="form-group">
-                <label for="sms-message">Message</label>
-                <textarea id="sms-message" rows="4" placeholder="Type your SMS message here..." required maxlength="160"></textarea>
-                <small id="sms-char-count">0/160 characters</small>
-              </div>
-              <button type="submit" class="btn btn-primary">Send SMS</button>
-            </form>
-          </div>
-          <div class="sms-history-section">
-            <h3>SMS History</h3>
-            <div id="sms-history">
-              <p>No SMS sent yet.</p>
+        <div class="sms-form">
+          <form id="send-sms-form">
+            <label for="sms-recipients">Recipients</label>
+            <select id="sms-recipients" required>
+              <option value="">Select recipients...</option>
+              <option value="all">All Users</option>
+              <option value="custom">Custom Numbers</option>
+            </select>
+            <div id="custom-numbers-group" style="display:none;">
+              <label for="custom-phone-numbers">Phone Numbers (comma separated)</label>
+              <input type="text" id="custom-phone-numbers" placeholder="+2348012345678, +2348765432109" />
             </div>
-          </div>
+            <label for="sms-message">Message</label>
+            <textarea id="sms-message" rows="4" placeholder="Type your SMS message here..." required maxlength="160"></textarea>
+            <small id="sms-char-count">0/160 characters</small>
+            <button type="submit" class="btn btn-primary">Send SMS</button>
+          </form>
+        </div>
+        <div class="sms-history">
+          <h3>SMS History</h3>
+          <div id="sms-history-list"></div>
         </div>
       </section>
-      <section id="settings-section" class="admin-section" style="display:none;">
+      <section id="settings-section" class="section" style="display:none;">
         <h2>Settings</h2>
-        <h3>Send Update to Users</h3>
-        <form id="send-update-form" style="margin-bottom:1.5rem;">
-          <textarea id="update-message" rows="3" style="width:100%;max-width:500px;" placeholder="Type your update here..." required></textarea><br>
-          <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">Send Update</button>
+        <form id="send-update-form">
+          <label for="update-message">Send Update to Users</label>
+          <textarea id="update-message" rows="3" placeholder="Type your update here..." required></textarea>
+          <button type="submit" class="btn btn-primary">Send Update</button>
         </form>
         <h4>Previous Updates</h4>
-        <ul id="updates-list" style="max-width:600px;padding-left:1.2em;"></ul>
+        <ul id="updates-list"></ul>
       </section>
     </main>
   </div>
-  <!-- Add Product Modal -->
-  <div id="add-product-modal" class="modal">
+  <!-- Product Modal -->
+  <div id="product-modal" class="modal" style="display:none;">
     <div class="modal-content">
-      <button class="close" id="close-add-product-modal">&times;</button>
-      <h3>Add New Product</h3>
-      <form id="add-product-form">
-        <div class="form-group">
-          <label for="product-name">Name</label>
-          <input type="text" id="product-name" required />
-        </div>
-        <div class="form-group">
-          <label for="product-price">Price</label>
-          <input type="number" id="product-price" required min="0" />
-        </div>
-        <div class="form-group">
-          <label for="product-category">Category</label>
-          <input type="text" id="product-category" required />
-        </div>
-        <div class="form-group">
-          <label for="product-description">Description</label>
-          <textarea id="product-description" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="product-stock">Stock</label>
-          <input type="number" id="product-stock" required min="0" />
-        </div>
-        <div class="form-group">
-          <label for="product-image">Image</label>
-          <input type="file" id="product-image" accept="image/*" required />
-        </div>
-        <button type="submit" class="btn btn-success" style="margin-top:1rem;">Add Product</button>
-      </form>
-    </div>
-  </div>
-  <!-- Edit Product Modal -->
-  <div id="edit-product-modal" class="modal hidden">
-    <div class="modal-content">
-      <button class="close" id="close-edit-product-modal">&times;</button>
-      <h3>Edit Product</h3>
-      <form id="edit-product-form">
-        <div class="form-group">
-          <label for="edit-product-name">Name</label>
-          <input type="text" id="edit-product-name" required />
-        </div>
-        <div class="form-group">
-          <label for="edit-product-price">Price</label>
-          <input type="number" id="edit-product-price" required min="0" />
-        </div>
-        <div class="form-group">
-          <label for="edit-product-category">Category</label>
-          <input type="text" id="edit-product-category" required />
-        </div>
-        <div class="form-group">
-          <label for="edit-product-description">Description</label>
-          <textarea id="edit-product-description" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="edit-product-stock">Stock</label>
-          <input type="number" id="edit-product-stock" required min="0" />
-        </div>
-        <div class="form-group">
-          <label for="edit-product-image">Image</label>
-          <input type="file" id="edit-product-image" accept="image/*" />
-          <img id="edit-product-image-preview" style="max-width:120px;max-height:80px;display:none;margin:0.5em 0;" />
-        </div>
-        <button type="submit" class="btn btn-success" style="margin-top:1rem;">Save Changes</button>
+      <button class="close" id="close-product-modal">&times;</button>
+      <h3 id="modal-title">Add/Edit Product</h3>
+      <form id="product-form">
+        <label for="product-name">Name</label>
+        <input type="text" id="product-name" required />
+        <label for="product-price">Price</label>
+        <input type="number" id="product-price" required min="0" />
+        <label for="product-category">Category</label>
+        <input type="text" id="product-category" required />
+        <label for="product-description">Description</label>
+        <textarea id="product-description" required></textarea>
+        <label for="product-stock">Stock</label>
+        <input type="number" id="product-stock" required min="0" />
+        <label for="product-image">Image</label>
+        <input type="file" id="product-image" accept="image/*" />
+        <img id="product-image-preview" style="max-width:120px;max-height:80px;display:none;margin:0.5em 0;" />
+        <button type="submit" class="btn btn-success" style="margin-top:1rem;">Save</button>
       </form>
     </div>
   </div>
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
-</html> 
+</html>
