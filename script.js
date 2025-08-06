@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
 
-    addProductForm.addEventListener('submit', async function(e) {
+    productForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       const name = document.getElementById('product-name').value.trim();
       const price = parseFloat(document.getElementById('product-price').value);
@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const data = await response.json();
           if (data.success) {
             alert('Product added successfully!');
-            addProductModal.style.display = 'none';
-            addProductForm.reset();
+            productModal.style.display = 'none';
+            productForm.reset();
             previewImg.style.display = 'none';
             loadProducts();
           } else {
