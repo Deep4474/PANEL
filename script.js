@@ -82,14 +82,17 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Please fill in all fields correctly and select an image.');
         return;
       }
+      // Upload image to an image host (imgbb, cloudinary, etc.) or use a direct URL. For demo, use base64 as fallback.
       const reader = new FileReader();
       reader.onload = async function(event) {
+        // In production, upload to a real image host and use the returned URL.
+        // For now, store as base64 data URL (not recommended for real apps, but works for demo/testing)
         const imageUrl = event.target.result;
         try {
           const response = await fetch(`${API_BASE_URL}/api/products`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, price, category, description, stock, imageUrl })
+            body: JSON.stringify({ name, price, category, description, stock, images: [imageUrl] })
           });
           const data = await response.json();
           if (data.success) {
@@ -139,36 +142,61 @@ function displayProducts() {
       <td>${product.stock || ''}</td>
       <td><img src="${product.images && product.images[0] || product.imageUrl || ''}" alt="Product Image" style="max-width:60px;max-height:40px;object-fit:cover;" /></td>
       <td>
-        <button class="btn btn-danger" onclick="deleteProduct('${prodId}')">Delete</button>
-        <button class="btn btn-primary" onclick="editProduct('${prodId}')">Edit</button>
+        <button class="btn btn-danger btn-delete-product" data-id="${prodId}">Delete</button>
+        <button class="btn btn-primary btn-edit-product" data-id="${prodId}">Edit</button>
       </td>
     `;
     tbody.appendChild(row);
   });
+
+  // Attach event listeners for edit/delete buttons
+  tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
+    btn.onclick = async function() {
+      const id = this.getAttribute('data-id');
+      if (!confirm('Are you sure you want to delete this product?')) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          alert('Failed to delete product. Server response: ' + errorText);
+          return;
+        }
+        const data = await response.json();
+        if (data.success) {
+          alert('Product deleted successfully!');
+          loadProducts();
+        } else {
+          alert(data.error || data.message || 'Failed to delete product.');
+        }
+      } catch (err) {
+        alert('Error deleting product: ' + (err.message || err));
+      }
+    };
+  });
+  tbody.querySelectorAll('.btn-edit-product').forEach(btn => {
+    btn.onclick = function() {
+      const id = this.getAttribute('data-id');
+      window.editProduct(id);
+    };
+  });
 }
 
-window.deleteProduct = async function(id) {
 
-  if (!confirm('Are you sure you want to delete this product?')) return;
+// --- Ensure admin receives order notifications ---
+// This function can be called after a successful order placement (from user site, not admin panel)
+// It triggers the backend to send an email to admin (backend must support this endpoint)
+async function notifyAdminOfOrder(order) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
+    await fetch(`${API_BASE_URL}/api/notify-admin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order })
     });
-    if (!response.ok) {
-      const errorText = await response.text();
-      alert('Failed to delete product. Server response: ' + errorText);
-      return;
-    }
-    const data = await response.json();
-    if (data.success) {
-      alert('Product deleted successfully!');
-      loadProducts();
-    } else {
-      alert(data.error || data.message || 'Failed to delete product.');
-    }
-  } catch (err) {
-    alert('Error deleting product: ' + (err.message || err));
+  } catch (e) {
+    // Optionally log error
   }
 }
 
@@ -213,13 +241,23 @@ window.editProduct = function(id) {
   } else {
     modal.style.display = 'flex';
   }
-  // Prefill form
-  document.getElementById('edit-product-name').value = product.name || '';
-  document.getElementById('edit-product-price').value = product.price || '';
-  document.getElementById('edit-product-category').value = product.category || '';
-  document.getElementById('edit-product-description').value = product.description || product.desc || '';
-  document.getElementById('edit-product-stock').value = product.stock || '';
-  document.getElementById('edit-product-imageUrl').value = (product.images && product.images[0]) || product.imageUrl || '';
+  // Prefill form, but only if modal and fields exist
+  const nameField = document.getElementById('edit-product-name');
+  const priceField = document.getElementById('edit-product-price');
+  const categoryField = document.getElementById('edit-product-category');
+  const descField = document.getElementById('edit-product-description');
+  const stockField = document.getElementById('edit-product-stock');
+  const imageUrlField = document.getElementById('edit-product-imageUrl');
+  if (!nameField || !priceField || !categoryField || !descField || !stockField || !imageUrlField) {
+    alert('Edit form fields not found. Please reload the page.');
+    return;
+  }
+  nameField.value = product.name || '';
+  priceField.value = product.price || '';
+  categoryField.value = product.category || '';
+  descField.value = product.description || product.desc || '';
+  stockField.value = product.stock || '';
+  imageUrlField.value = (product.images && product.images[0]) || product.imageUrl || '';
   // Close modal logic
   document.getElementById('close-edit-product-modal').onclick = function() {
     modal.style.display = 'none';
@@ -245,7 +283,7 @@ window.editProduct = function(id) {
       const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, price, category, description, stock, imageUrl })
+        body: JSON.stringify({ name, price, category, description, stock, images: [imageUrl] })
       });
       const data = await response.json();
       if (data.success) {
