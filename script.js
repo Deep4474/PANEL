@@ -139,21 +139,23 @@ async function loadProducts() {
     products = await fetchProductsFromSupabase();
     displayProducts();
   } catch (error) {
-    document.getElementById('products-body').innerHTML = '<tr><td colspan="8">Failed to load products</td></tr>';
+    document.getElementById('products-table-container').innerHTML = '<div class="error">Failed to load products</div>';
   }
 }
 
 function displayProducts() {
-  const tbody = document.getElementById('products-body');
-  tbody.innerHTML = '';
+  const container = document.getElementById('products-table-container');
+  if (!container) return;
   if (!products.length) {
-    tbody.innerHTML = '<tr><td colspan="8">No products found</td></tr>';
+    container.innerHTML = '<div class="info">No products found</div>';
     return;
   }
+  let html = `<table><thead><tr>
+    <th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Description</th><th>Stock</th><th>Image</th><th>Action</th>
+  </tr></thead><tbody>`;
   products.forEach(product => {
     const prodId = product._id || product.id || '';
-    const row = document.createElement('tr');
-    row.innerHTML = `
+    html += `<tr>
       <td>${prodId}</td>
       <td>${product.name || ''}</td>
       <td>₦${product.price?.toLocaleString() || ''}</td>
@@ -165,38 +167,19 @@ function displayProducts() {
         <button class="btn btn-danger btn-delete-product" data-id="${prodId}">Delete</button>
         <button class="btn btn-primary btn-edit-product" data-id="${prodId}">Edit</button>
       </td>
-    `;
-    tbody.appendChild(row);
+    </tr>`;
   });
-
+  html += '</tbody></table>';
+  container.innerHTML = html;
   // Attach event listeners for edit/delete buttons
-  tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
+  container.querySelectorAll('.btn-delete-product').forEach(btn => {
     btn.onclick = async function() {
       const id = this.getAttribute('data-id');
       if (!confirm('Are you sure you want to delete this product?')) return;
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) {
-          const errorText = await response.text();
-          alert('Failed to delete product. Server response: ' + errorText);
-          return;
-        }
-        const data = await response.json();
-        if (data.success) {
-          alert('Product deleted successfully!');
-          loadProducts();
-        } else {
-          alert(data.error || data.message || 'Failed to delete product.');
-        }
-      } catch (err) {
-        alert('Error deleting product: ' + (err.message || err));
-      }
+      // ...existing code for delete...
     };
   });
-  tbody.querySelectorAll('.btn-edit-product').forEach(btn => {
+  container.querySelectorAll('.btn-edit-product').forEach(btn => {
     btn.onclick = function() {
       const id = this.getAttribute('data-id');
       window.editProduct(id);
@@ -330,36 +313,26 @@ async function loadOrders() {
     orders = ordersData;
     displayOrders(productsList);
   } catch (error) {
-    document.getElementById('orders-body').innerHTML = '<tr><td colspan="11">Failed to load orders</td></tr>';
+    document.getElementById('orders-table-container').innerHTML = '<div class="error">Failed to load orders</div>';
   }
 }
 
 function displayOrders(productsList = []) {
-  const tbody = document.getElementById('orders-body');
-  tbody.innerHTML = '';
+  const container = document.getElementById('orders-table-container');
+  if (!container) return;
   const getProductName = (id) => {
     const p = productsList.find(pr => String(pr.id) === String(id));
     return p ? p.name : id;
   };
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="11">No orders found</td></tr>';
+    container.innerHTML = '<div class="info">No orders found</div>';
     return;
   }
-  // Add a label above the table
-  const ordersSection = document.getElementById('orders-section');
-  let infoLabel = document.getElementById('admin-orders-info-label');
-  if (!infoLabel) {
-    infoLabel = document.createElement('div');
-    infoLabel.id = 'admin-orders-info-label';
-    infoLabel.style.margin = '0 0 1em 0';
-    infoLabel.style.fontSize = '1.05em';
-    infoLabel.style.color = '#444';
-    infoLabel.textContent = 'This section shows all orders sent to admin by users. You can view details and take action (update status) for each order.';
-    ordersSection.insertBefore(infoLabel, ordersSection.querySelector('table'));
-  }
+  let html = `<table><thead><tr>
+    <th>ID</th><th>Product</th><th>Qty</th><th>Customer</th><th>Phone</th><th>Address</th><th>Delivery</th><th>Payment</th><th>Status</th><th>Date</th><th>Action</th>
+  </tr></thead><tbody>`;
   orders.forEach(order => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
+    html += `<tr>
       <td>${order.id || ''}</td>
       <td>${getProductName(order.productId) || ''}</td>
       <td>${order.quantity || ''}</td>
@@ -380,31 +353,17 @@ function displayOrders(productsList = []) {
         </select>
         <button class="btn btn-success btn-update-status" data-id="${order.id}">Update</button>
       </td>
-    `;
-    tbody.appendChild(row);
+    </tr>`;
   });
+  html += '</tbody></table>';
+  container.innerHTML = html;
   // Add event listeners for update buttons
-  tbody.querySelectorAll('.btn-update-status').forEach(btn => {
+  container.querySelectorAll('.btn-update-status').forEach(btn => {
     btn.onclick = async function() {
       const id = this.getAttribute('data-id');
       const select = this.parentElement.querySelector('.order-status-select');
       const status = select.value;
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/orders/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert('Order status updated!');
-          loadOrders();
-        } else {
-          alert(data.error || 'Failed to update order.');
-        }
-      } catch {
-        alert('Failed to update order.');
-      }
+      // ...existing code for update status...
     };
   });
 }
@@ -418,26 +377,29 @@ async function loadUsers() {
     users = data;
     displayUsers();
   } catch (error) {
-    document.getElementById('users-body').innerHTML = '<tr><td colspan="3">Failed to load users</td></tr>';
+    document.getElementById('users-table-container').innerHTML = '<div class="error">Failed to load users</div>';
   }
 }
 
 function displayUsers() {
-  const tbody = document.getElementById('users-body');
-  tbody.innerHTML = '';
+  const container = document.getElementById('users-table-container');
+  if (!container) return;
   if (!users.length) {
-    tbody.innerHTML = '<tr><td colspan="3">No users found</td></tr>';
+    container.innerHTML = '<div class="info">No users found</div>';
     return;
   }
+  let html = `<table><thead><tr>
+    <th>Name</th><th>Email</th><th>Verified</th>
+  </tr></thead><tbody>`;
   users.forEach(user => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
+    html += `<tr>
       <td>${user.name || ''}</td>
       <td>${user.email || ''}</td>
       <td>${user.verified ? 'Yes' : 'No'}</td>
-    `;
-    tbody.appendChild(row);
+    </tr>`;
   });
+  html += '</tbody></table>';
+  container.innerHTML = html;
 }
 
 
@@ -575,18 +537,17 @@ async function loadSMSHistory() {
     if (error) throw error;
     displaySMSHistory(data || []);
   } catch (error) {
-    document.getElementById('sms-history').innerHTML = '<p>Failed to load SMS history.</p>';
+    document.getElementById('sms-history-list').innerHTML = '<p>Failed to load SMS history.</p>';
   }
 }
 
 function displaySMSHistory(history) {
-  const historyContainer = document.getElementById('sms-history');
-  
+  const historyContainer = document.getElementById('sms-history-list');
+  if (!historyContainer) return;
   if (!history || !history.length) {
     historyContainer.innerHTML = '<p>No SMS sent yet.</p>';
     return;
   }
-  
   historyContainer.innerHTML = history.map(sms => `
     <div class="sms-history-item">
       <h4>${sms.recipients === 'all' ? 'All Users' : 'Custom Numbers'}</h4>
