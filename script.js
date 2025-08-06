@@ -567,11 +567,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+
+// --- Supabase: Load SMS History ---
 async function loadSMSHistory() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/sms/history`);
-    const history = await response.json();
-    displaySMSHistory(history);
+    const { data, error } = await supabase.from('sms_history').select('*').order('date', { ascending: false });
+    if (error) throw error;
+    displaySMSHistory(data || []);
   } catch (error) {
     document.getElementById('sms-history').innerHTML = '<p>Failed to load SMS history.</p>';
   }
