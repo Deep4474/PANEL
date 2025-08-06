@@ -22,9 +22,9 @@ let orders = [];
 let users = [];
 
 function showSection(sectionId, title) {
-  document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
+  document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
   document.getElementById(sectionId).style.display = 'block';
-  document.getElementById('admin-title').textContent = title;
+  document.getElementById('main-title').textContent = title;
   document.getElementById('add-product-btn').style.display = (sectionId === 'products-section') ? 'inline-block' : 'none';
   document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
   const navId = 'nav-' + sectionId.replace('-section','');
@@ -44,25 +44,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
   showSection('dashboard-section', 'Dashboard');
 
-  // Add Product Modal logic
+  // Product Modal logic (new modal)
   const addProductBtn = document.getElementById('add-product-btn');
-  const addProductModal = document.getElementById('add-product-modal');
-  const closeAddProductModal = document.getElementById('close-add-product-modal');
-  const addProductForm = document.getElementById('add-product-form');
+  const productModal = document.getElementById('product-modal');
+  const closeProductModal = document.getElementById('close-product-modal');
+  const productForm = document.getElementById('product-form');
 
-  if (addProductBtn && addProductModal && closeAddProductModal) {
+  if (addProductBtn && productModal && closeProductModal) {
     addProductBtn.addEventListener('click', function() {
-      addProductModal.style.display = 'flex';
+      productModal.style.display = 'flex';
     });
-    closeAddProductModal.addEventListener('click', function() {
-      addProductModal.style.display = 'none';
+    closeProductModal.addEventListener('click', function() {
+      productModal.style.display = 'none';
     });
-    addProductModal.addEventListener('click', function(e) {
-      if (e.target === addProductModal) addProductModal.style.display = 'none';
+    productModal.addEventListener('click', function(e) {
+      if (e.target === productModal) productModal.style.display = 'none';
     });
   }
 
-  if (addProductForm) {
+  if (productForm) {
     // Image preview logic
     const imageInput = document.getElementById('product-image');
     let previewImg = document.getElementById('product-image-preview');
