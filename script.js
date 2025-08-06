@@ -1,3 +1,22 @@
+// --- Supabase Client Setup ---
+// Replace with your actual Supabase project URL and anon key
+const SUPABASE_URL = 'https://your-project.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Example: Fetch products directly from Supabase
+async function fetchProductsFromSupabase() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('id', { ascending: false });
+  if (error) {
+    console.error('Supabase fetch error:', error);
+    return [];
+  }
+  return data;
+}
+
 let products = [];
 let orders = [];
 let users = [];
