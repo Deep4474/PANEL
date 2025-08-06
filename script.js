@@ -132,10 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+
+// --- Supabase: Load Products ---
 async function loadProducts() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/products`);
-    products = await response.json();
+    products = await fetchProductsFromSupabase();
     displayProducts();
   } catch (error) {
     document.getElementById('products-body').innerHTML = '<tr><td colspan="8">Failed to load products</td></tr>';
@@ -318,13 +319,15 @@ window.editProduct = function(id) {
   };
 };
 
+
+// --- Supabase: Load Orders ---
 async function loadOrders() {
   try {
     // Fetch products for mapping productId to name
-    const prodRes = await fetch(`${API_BASE_URL}/api/products`);
-    const productsList = await prodRes.json();
-    const response = await fetch(`${API_BASE_URL}/api/orders`);
-    orders = await response.json();
+    const { data: productsList, error: prodErr } = await supabase.from('products').select('*');
+    const { data: ordersData, error: ordersErr } = await supabase.from('orders').select('*');
+    if (prodErr || ordersErr) throw new Error('Failed to fetch orders or products');
+    orders = ordersData;
     displayOrders(productsList);
   } catch (error) {
     document.getElementById('orders-body').innerHTML = '<tr><td colspan="11">Failed to load orders</td></tr>';
@@ -406,10 +409,13 @@ function displayOrders(productsList = []) {
   });
 }
 
+
+// --- Supabase: Load Users ---
 async function loadUsers() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users`);
-    users = await response.json();
+    const { data, error } = await supabase.from('users').select('*');
+    if (error) throw error;
+    users = data;
     displayUsers();
   } catch (error) {
     document.getElementById('users-body').innerHTML = '<tr><td colspan="3">Failed to load users</td></tr>';
@@ -434,21 +440,21 @@ function displayUsers() {
   });
 }
 
-function loadUpdates() {
+
+// --- Supabase: Load Updates ---
+async function loadUpdates() {
   const updatesList = document.getElementById('updates-list');
   updatesList.innerHTML = '<li>Loading...</li>';
-  fetch(`${API_BASE_URL}/api/updates`)
-    .then(res => res.json())
-    .then(updates => {
-      if (!updates.length) {
-        updatesList.innerHTML = '<li>No updates yet.</li>';
-        return;
-      }
-      updatesList.innerHTML = updates.map(u => `<li><b>${new Date(u.date).toLocaleString()}:</b> ${u.message}</li>`).join('');
-    })
-    .catch(() => {
-      updatesList.innerHTML = '<li>Failed to load updates.</li>';
-    });
+  try {
+    const { data, error } = await supabase.from('updates').select('*').order('date', { ascending: false });
+    if (error || !data || !data.length) {
+      updatesList.innerHTML = '<li>No updates yet.</li>';
+      return;
+    }
+    updatesList.innerHTML = data.map(u => `<li><b>${new Date(u.date).toLocaleString()}:</b> ${u.message}</li>`).join('');
+  } catch {
+    updatesList.innerHTML = '<li>Failed to load updates.</li>';
+  }
 }
 
 const sendUpdateForm = document.getElementById('send-update-form');
